@@ -39,7 +39,9 @@ def load_ml_pipeline():
             
         return model, pipeline, explainer, shap_sample
     except Exception as e:
-        print(f"Error loading pipeline: {e}")
+        st.error(f"❌ Error loading ML pipeline: {e}")
+        import traceback
+        st.code(traceback.format_exc())
         return None, None, None, None
 
 def get_dashboard_data_sample():
