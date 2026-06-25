@@ -5,7 +5,7 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from src.config import BEST_MODEL_PATH, PREPROCESSOR_PATH, MODEL_DIR
+from src.config import BEST_MODEL_PATH, PREPROCESSOR_PATH, MODEL_DIR, DATA_DIR
 from src.explainability import get_natural_language_explanation, explain_single_order
 from src.prescriptive import (
     compute_risk_priority_index, compute_revenue_at_risk, 
@@ -49,6 +49,13 @@ def get_dashboard_data_sample():
     Loads a sample of 2,000 test set rows to run the dashboard efficiently.
     Ensures dates are present and features are already engineered for rapid chart rendering.
     """
+    sample_path = os.path.join(DATA_DIR, "dashboard_sample.csv")
+    if os.path.exists(sample_path):
+        print("Loading pre-processed dashboard sample...")
+        sample_df = pd.read_csv(sample_path)
+        sample_df["Order Date"] = pd.to_datetime(sample_df["Order Date"])
+        return sample_df
+
     from src.data_loader import load_raw_data, preprocess_raw_data, get_train_test_split
     from src.features import LogisticsFeatureEngineer
     
