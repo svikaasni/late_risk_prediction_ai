@@ -19,21 +19,27 @@ def load_ml_pipeline():
     Loads and caches the trained machine learning model, SHAP explainer,
     and preprocessing components.
     """
-    # Streamlit imports inside to avoid imports issues if not in streamlit process
     try:
-        model = joblib.load(BEST_MODEL_PATH)
-        pipeline = joblib.load(PREPROCESSOR_PATH)
+        # Load best model and preprocessor using open file descriptors for cross-platform reliability
+        with open(BEST_MODEL_PATH, "rb") as f:
+            model = joblib.load(f)
+            
+        with open(PREPROCESSOR_PATH, "rb") as f:
+            pipeline = joblib.load(f)
         
         # Load SHAP explainer
         explainer_path = os.path.join(MODEL_DIR, "shap_explainer.joblib")
         if os.path.exists(explainer_path):
-            explainer = joblib.load(explainer_path)
+            with open(explainer_path, "rb") as f:
+                explainer = joblib.load(f)
         else:
             explainer = None
             
+        # Load SHAP values sample
         shap_values_path = os.path.join(MODEL_DIR, "shap_values_sample.joblib")
         if os.path.exists(shap_values_path):
-            shap_sample = joblib.load(shap_values_path)
+            with open(shap_values_path, "rb") as f:
+                shap_sample = joblib.load(f)
         else:
             shap_sample = None
             
