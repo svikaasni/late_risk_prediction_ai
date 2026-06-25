@@ -27,6 +27,22 @@ try:
     st.sidebar.write("Root files:", os.listdir("."))
     if os.path.exists("models"):
         st.sidebar.write("Models files:", os.listdir("models"))
+        
+        # Test relative open
+        try:
+            with open("models/best_model.joblib", "rb") as f:
+                st.sidebar.write("✅ Rel open: Success")
+        except Exception as e:
+            st.sidebar.write("❌ Rel open error:", str(e))
+            
+        # Test absolute open
+        try:
+            from src.config import BEST_MODEL_PATH
+            st.sidebar.write("BEST_MODEL_PATH:", BEST_MODEL_PATH)
+            with open(BEST_MODEL_PATH, "rb") as f:
+                st.sidebar.write("✅ Abs open: Success")
+        except Exception as e:
+            st.sidebar.write("❌ Abs open error:", str(e))
     else:
         st.sidebar.write("models/ folder missing!")
 except Exception as e:
