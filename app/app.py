@@ -20,6 +20,18 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Temporary debugging on Streamlit Cloud (Sidebar)
+st.sidebar.markdown("### 🔍 Debug Info")
+st.sidebar.write("CWD:", os.getcwd())
+try:
+    st.sidebar.write("Root files:", os.listdir("."))
+    if os.path.exists("models"):
+        st.sidebar.write("Models files:", os.listdir("models"))
+    else:
+        st.sidebar.write("models/ folder missing!")
+except Exception as e:
+    st.sidebar.write("Error listing files:", e)
+
 # App custom CSS styling ( Sleek dark mode / glassmorphism theme)
 st.markdown("""
 <style>
