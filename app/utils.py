@@ -1,4 +1,17 @@
 import os
+import sys
+
+# Safe print to prevent OSError [Errno 22] when running in headless/background redirect mode on Windows
+def safe_print(*args, **kwargs):
+    try:
+        sys.stdout.write(" ".join(map(str, args)) + "\n")
+        sys.stdout.flush()
+    except OSError:
+        pass
+
+import builtins
+builtins.print = safe_print
+
 import joblib
 import pandas as pd
 import numpy as np
