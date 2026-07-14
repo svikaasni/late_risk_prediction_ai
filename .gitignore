@@ -44,3 +44,5 @@ data/APL_logisticsdata_risk_prediction.csv
 reports/drift_report.json
 .system_generated/
 *.log
+.streamlit/secrets.toml
+.env

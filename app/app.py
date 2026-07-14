@@ -31,35 +31,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-# Temporary debugging on Streamlit Cloud (Sidebar)
-st.sidebar.markdown("### 🔍 Debug Info")
-st.sidebar.write("CWD:", os.getcwd())
-try:
-    st.sidebar.write("Root files:", os.listdir("."))
-    if os.path.exists("models"):
-        st.sidebar.write("Models files:", os.listdir("models"))
-        
-        # Test relative open
-        try:
-            with open("models/best_model.joblib", "rb") as f:
-                st.sidebar.write("✅ Rel open: Success")
-        except Exception as e:
-            st.sidebar.write("❌ Rel open error:", str(e))
-            
-        # Test absolute open
-        try:
-            from src.config import BEST_MODEL_PATH
-            st.sidebar.write("BEST_MODEL_PATH:", BEST_MODEL_PATH)
-            with open(BEST_MODEL_PATH, "rb") as f:
-                st.sidebar.write("✅ Abs open: Success")
-        except Exception as e:
-            st.sidebar.write("❌ Abs open error:", str(e))
-    else:
-        st.sidebar.write("models/ folder missing!")
-except Exception as e:
-    st.sidebar.write("Error listing files:", e)
-
 # App custom CSS styling ( Sleek dark mode / glassmorphism theme)
 st.markdown("""
 <style>
@@ -120,6 +91,22 @@ st.markdown("""
 from utils import load_ml_pipeline, get_dashboard_data_sample, predict_df_risks, handle_copilot_query
 from src.explainability import explain_single_order
 from src.prescriptive import get_prescriptive_recommendations, compute_intervention_score
+def get_gemini_api_key():
+    key = ""
+    # 1. Check session state
+    if st.session_state.get("gemini_api_key"):
+        key = st.session_state["gemini_api_key"]
+    # 2. Check environment variables
+    elif os.environ.get("GEMINI_API_KEY"):
+        key = os.environ.get("GEMINI_API_KEY")
+    # 3. Check Streamlit Secrets
+    else:
+        try:
+            if "GEMINI_API_KEY" in st.secrets:
+                key = st.secrets["GEMINI_API_KEY"]
+        except Exception:
+            pass
+    return key.strip().strip("'").strip('"') if key else ""
 
 # Load model, pipeline and sample data
 model, pipeline, explainer, shap_sample = load_ml_pipeline()
@@ -153,6 +140,26 @@ page = st.sidebar.radio(
 st.sidebar.markdown("---")
 st.sidebar.markdown("**ML Model Status:** `ACTIVE (LightGBM)`")
 st.sidebar.markdown(f"**Data Version:** `2026.06.24` ({len(data_sample) if data_sample is not None else 0} pending orders)")
+
+# API Key configuration (shown only when the Copilot page is active)
+if page == "Generative AI Copilot":
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 🔑 API Configuration")
+    try:
+        import google.generativeai as genai
+        st.sidebar.caption(f"Google GenAI SDK: v`{genai.__version__}`")
+    except Exception:
+        st.sidebar.caption("Google GenAI SDK: Not found")
+    api_key_input = st.sidebar.text_input(
+        "Gemini API Key",
+        value=get_gemini_api_key(),
+        type="password",
+        help="Provide your Gemini API key to enable the live LLM Supply Chain Copilot."
+    )
+    if api_key_input:
+        st.session_state["gemini_api_key"] = api_key_input
+    else:
+        st.session_state["gemini_api_key"] = ""
 
 if data_sample is not None:
     # ----------------------------------------------------
@@ -623,7 +630,8 @@ if data_sample is not None:
             st.session_state.messages.append({"role": "user", "content": prompt})
             
             # Generate response
-            response = handle_copilot_query(prompt, data_sample, model, pipeline)
+            api_key = get_gemini_api_key()
+            response = handle_copilot_query(prompt, data_sample, model, pipeline, api_key=api_key)
             
             # Append assistant response
             st.session_state.messages.append({"role": "assistant", "content": response})
